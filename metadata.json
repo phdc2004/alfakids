@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Alfa Kids Recreação",
+  "description": "A melhor recreação e lazer para festas infantis. Levamos diversão com segurança conduzida por profissionais de Educação Física.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
