@@ -19,6 +19,8 @@ import bucketTieDyeImg from "./assets/images/regenerated_image_1780336502004.png
 import portaRetratoImg from "./assets/images/regenerated_image_1780337776013.png";
 import cupcakeImg from "./assets/images/regenerated_image_1780338131925.jpg";
 import diaDoDesafioVideo from "./assets/images/dia_do_desafio.mp4";
+import skibumImg from "./assets/images/regenerated_image_1780690447999.png";
+import scrapbookImg from "./assets/images/regenerated_image_1780690960776.jpg";
 
 import mascotLogoPng from "./assets/images/regenerated_image_1780341167335.png";
 import { 
@@ -418,7 +420,7 @@ export default function App() {
       title: "Skibum",
       description: "A atividade mais refrescante e divertida com água, lona e muito sabão!",
       detailedDescription: "Uma lona gigante de alta resistência é estendida no gramado, coberta com água corrente e sabão neutro hipoalergênico. As crianças deslizam com segurança sob a supervisão constante de nossos recreadores graduados. Garantia de adrenalina e risadas infinitas!",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDFLWKli4OvJK_mb8aRKSyxDbKmiOGz7VrjO7-zYnBzo3LnafN7ZeWaqEqJZa2c26LHXdm4dVTY1hE59brSYjcZgtNxdrkJqNnKUF0fy0DFtgzSt-XsicpZK4v9jzZ45bAqvmnYb3iLycm_G6Yk0iyNmdnO4FzNiaUeBHe6YebbFFw2ebx_p3ziGJlT80i9ABaej2g2VzSYnW514iD2kHRll8G4OGB-yUHIVJ2b00z28zC_tQqNZKgFvEHRuxycUFQOSdotB3zfMZeZ",
+      image: skibumImg,
       safety: "Uso de sabão neutro infantil que não arde os olhos; supervisor exclusivo nas duas pontas da lona.",
       bestFor: "Dias quentes e ensolarados, chácaras, clubes ou quintal amplo.",
       emoji: "💦"
@@ -480,7 +482,7 @@ export default function App() {
       icon: Lightbulb, 
       description: "Livro de recortes, adesivos e desenhos para guardar fotos do evento.", 
       color: "bg-blue-50 border-blue-200 text-cosmic-blue",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDqJkvKXAJBEHpbsf8nUllDLbObgq9055oBb4USOaS3ph-UfFFGU2BIkz4Vkg1Ag_pinhJVmVskkB5i8mnDb4CZc8oYutq5ZgwP7ESnnMYDOMI0X_MCZ0D7Wf9_usjPWFcVj0RbMjJP9DdwKShfIXf7kZLuGvS9Q9fdv8-pASTNWAKl3xKOuPughrDQcpODFy6Tm4w2WCjqd7mCxn0faYorvGtLsVVgXeElXBp0teKYY7c2FWMfTA_KGFXbQ3GvzkeULqYWr2fmBq7t"
+      image: scrapbookImg
     },
     { 
       id: "w-mascara", 
@@ -589,6 +591,10 @@ export default function App() {
     {
       q: "Atendem em quais regiões?",
       a: "Estamos localizados em Taubaté, porém também conseguimos realizar incríveis festas em São José dos Campos, Jacareí, Caçapava, Pinda e cidades adjacentes do Litoral Norte e Serra da Mantiqueira."
+    },
+    {
+      q: "Quais são as formas de pagamento que aceitamos?",
+      a: "Aceitamos PIX, Dinheiro, Débito e parcelamos até 2x sem juros no Cartão de Crédito"
     }
   ];
 
@@ -1708,24 +1714,24 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
-                  p: "Festa do Bernardo de 7 anos",
-                  text: "Estávamos muito preocupados com o campeonato de futebol pois os amigos dele são extremamente enérgicos. O Tio Gelado e os monitores conduziram tudo com uma sobriedade esportiva fantástica! Os meninos se cansaram respeitosamente e as medalhas finais foram lúdicas e ricas. Valeu cada investimento!",
-                  author: "Mariana Alvarenga",
-                  city: "São José dos Campos/SP",
-                  rating: 5
-                },
-                {
-                  p: "Aniversário de Clarinha, 5 anos",
-                  text: "Contratei a Oficina de Cupcakes e a Festa das Cores. A equipe Alfa Kids forrou todo o gramado do condomínio e cuidou das crianças de maneira carinhosa. A minha Clarinha é super tímida, e o monitor Enzo soube integrá-la com tanto afeto que ela brincou a festa inteira! Recomendo de olhos fechados.",
-                  author: "Regiane Mendonça",
+                  p: "Festa do Miguel, 10 anos",
+                  text: "Evento super organizado. Todas crianças se divertiram do começo ao fim com segurança e muita alegria. Tio Gelado e tia Cometa são a simpatia em pessoa",
+                  author: "Cris",
                   city: "Taubaté/SP",
                   rating: 5
                 },
                 {
-                  p: "Evento Corporativo de Fim de Ano",
-                  text: "Excelente! Recreadores formados, muito organizados, chegaram 1 hora antes para higienizar todos os materiais de gincana. O Skibum de água e sabão no final da tarde foi o delírio da criançada (e até de alguns diretores). Já reservamos os mesmos recreadores para a festa deste ano!",
-                  author: "Ricardo Castor",
-                  city: "Jacareí/SP",
+                  p: "Festa do Pedro, 10 anos",
+                  text: "Estavamos muito ansiosos para o aniversario do Pedro, começamos a procurar uma equipe de recreação e encontramos o Tio Gelado. Desde do inicio do atendimento ele foi super educado e prestativo. As brincadeiras foram totalmente diferentes do que ele já tinha feito. A oficina torta na cara foi um sucessooo!!!",
+                  author: "Damaris",
+                  city: "Taubaté/SP",
+                  rating: 5
+                },
+                {
+                  p: "Evento Corporativo no Colégio Basic",
+                  text: "Contratamos a Alfa Kids para o evento \"Dia do Desafio\" e eles conduziram o evento de forma impecável e superaram as nossas expectativas, já estamos programando para o proximo evento!!!",
+                  author: "Secretaria Administrativa do Colégio Basic",
+                  city: "Taubaté/SP",
                   rating: 5
                 }
               ].map((dep, i) => (
@@ -1769,6 +1775,9 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
               <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-cosmic-blue">
                 Dúvidas <span className="text-recreation-orange">Frequentes dos Pais</span>
               </h2>
+              <p className="text-neutral-500 text-xs md:text-sm max-w-xl mx-auto leading-relaxed">
+                perguntas e duvidas que recebemos frequentemente para vocês terem 100% de segurança ao contratar os serviços
+              </p>
             </div>
 
             {/* Accordion List */}
