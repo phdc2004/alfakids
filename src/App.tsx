@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import regeneratedImage from "./assets/images/regenerated_image_1779980547471.jpg";
 import textLogoPng from "./assets/images/regenerated_image_1780341386975.png";
 import quemSomosImg1 from "./assets/images/regenerated_image_1780105520084.jpg";
@@ -18,6 +18,7 @@ import galeriaCupcakesImg from "./assets/images/regenerated_image_1780338838925.
 import bucketTieDyeImg from "./assets/images/regenerated_image_1780336502004.png";
 import portaRetratoImg from "./assets/images/regenerated_image_1780337776013.png";
 import cupcakeImg from "./assets/images/regenerated_image_1780338131925.jpg";
+import diaDoDesafioVideo from "./assets/images/dia_do_desafio.mp4";
 
 import mascotLogoPng from "./assets/images/regenerated_image_1780341167335.png";
 import { 
@@ -47,8 +48,100 @@ import {
   Utensils,
   Lightbulb,
   Scissors,
-  AlertTriangle
+  AlertTriangle,
+  Play,
+  Upload,
+  Link
 } from "lucide-react";
+
+// --- IndexedDB Utils to persist custom gallery videos locally ---
+const saveVideoToDB = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("videoDB", 1);
+    request.onupgradeneeded = (e: any) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("videos")) {
+        db.createObjectStore("videos");
+      }
+    };
+    request.onsuccess = (e: any) => {
+      const db = e.target.result;
+      const transaction = db.transaction("videos", "readwrite");
+      const store = transaction.objectStore("videos");
+      try {
+        const putRequest = store.put(file, "gallery_video");
+        putRequest.onsuccess = () => {
+          resolve(URL.createObjectURL(file));
+        };
+        putRequest.onerror = () => reject("Error storing file");
+      } catch (err) {
+        reject(err);
+      }
+    };
+    request.onerror = () => reject("Error opening db");
+  });
+};
+
+const loadVideoFromDB = (): Promise<File | null> => {
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.open("videoDB", 1);
+      request.onupgradeneeded = (e: any) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("videos")) {
+          db.createObjectStore("videos");
+        }
+      };
+      request.onsuccess = (e: any) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("videos")) {
+          resolve(null);
+          return;
+        }
+        const transaction = db.transaction("videos", "readonly");
+        const store = transaction.objectStore("videos");
+        const getRequest = store.get("gallery_video");
+        getRequest.onsuccess = () => {
+          resolve(getRequest.result || null);
+        };
+        getRequest.onerror = () => resolve(null);
+      };
+      request.onerror = () => resolve(null);
+    } catch (e) {
+      resolve(null);
+    }
+  });
+};
+
+const removeVideoFromDB = (): Promise<void> => {
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.open("videoDB", 1);
+      request.onsuccess = (e: any) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("videos")) {
+          resolve();
+          return;
+        }
+        const transaction = db.transaction("videos", "readwrite");
+        const store = transaction.objectStore("videos");
+        const deleteRequest = store.delete("gallery_video");
+        deleteRequest.onsuccess = () => resolve();
+        deleteRequest.onerror = () => resolve();
+      };
+      request.onerror = () => resolve();
+    } catch (e) {
+      resolve();
+    }
+  });
+};
+
+const getYoutubeId = (url: string) => {
+  if (!url) return "";
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : "";
+};
 
 // 2D Flat Minimalist Lion Paw Print trail components
 const PawPrintSVG = ({ className = "text-neutral-300" }: { className?: string }) => (
@@ -137,6 +230,111 @@ interface Workshop {
 export default function App() {
   // Mobile drawer state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Persistent Custom Video State
+  const [customVideoUrl, setCustomVideoUrl] = useState<string>("");
+  const [customVideoType, setCustomVideoType] = useState<"direct" | "youtube">("direct");
+  const [videoBlobUrl, setVideoBlobUrl] = useState<string>("");
+  // Uploader tabs: 'file' or 'link'
+  const [uploadTab, setUploadTab] = useState<"file" | "link">("file");
+  const [customVideoUrlInput, setCustomVideoUrlInput] = useState<string>("");
+
+  useEffect(() => {
+    // Try to load any previously saved video from IndexedDB on startup
+    loadVideoFromDB().then((file) => {
+      if (file) {
+        setVideoBlobUrl(URL.createObjectURL(file));
+      }
+    });
+
+    // Load any custom link from localStorage
+    const savedUrl = localStorage.getItem("alfa_custom_video_url");
+    if (savedUrl) {
+      setCustomVideoUrl(savedUrl);
+      setCustomVideoUrlInput(savedUrl);
+      if (savedUrl.includes("youtube.com") || savedUrl.includes("youtu.be")) {
+        setCustomVideoType("youtube");
+      } else {
+        setCustomVideoType("direct");
+      }
+    }
+  }, []);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        showToast("Processando e salvando vídeo no navegador...");
+        const blobUrl = await saveVideoToDB(file);
+        setVideoBlobUrl(blobUrl);
+        // Clear any stored link so the file takes priority
+        setCustomVideoUrl("");
+        localStorage.removeItem("alfa_custom_video_url");
+        showToast("Vídeo salvo com sucesso!");
+        
+        // If lightbox is open, sync active URL
+        if (activeLightboxImage && activeLightboxImage.type === "video") {
+          setActiveLightboxImage({ 
+            url: blobUrl, 
+            alt: activeLightboxImage.alt, 
+            type: "video" 
+          });
+        }
+      } catch (err) {
+        showToast("Erro ao salvar o vídeo.");
+      }
+    }
+  };
+
+  const handleSaveLink = () => {
+    if (customVideoUrlInput.trim()) {
+      const isYoutube = customVideoUrlInput.includes("youtube.com") || customVideoUrlInput.includes("youtu.be");
+      setCustomVideoUrl(customVideoUrlInput);
+      setCustomVideoType(isYoutube ? "youtube" : "direct");
+      localStorage.setItem("alfa_custom_video_url", customVideoUrlInput);
+      
+      // Clear file blob URL to give link priority
+      if (videoBlobUrl) {
+        URL.revokeObjectURL(videoBlobUrl);
+        setVideoBlobUrl("");
+        removeVideoFromDB();
+      }
+      
+      showToast("Link de vídeo salvo!");
+
+      // If lightbox is open, sync active URL
+      if (activeLightboxImage && activeLightboxImage.type === "video") {
+        setActiveLightboxImage({ 
+          url: customVideoUrlInput, 
+          alt: activeLightboxImage.alt, 
+          type: "video" 
+        });
+      }
+    }
+  };
+
+  const handleResetVideo = async () => {
+    if (videoBlobUrl) {
+      URL.revokeObjectURL(videoBlobUrl);
+      setVideoBlobUrl("");
+    }
+    await removeVideoFromDB();
+    setCustomVideoUrl("");
+    setCustomVideoUrlInput("");
+    localStorage.removeItem("alfa_custom_video_url");
+    showToast("Vídeo restaurado!");
+
+    if (activeLightboxImage && activeLightboxImage.type === "video") {
+      setActiveLightboxImage({ 
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", 
+        alt: activeLightboxImage.alt, 
+        type: "video" 
+      });
+    }
+  };
+
+  const currentVideoResolved = videoBlobUrl || customVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4";
+  const currentVideoResolvedType = customVideoUrl && (customVideoUrl.includes("youtube.com") || customVideoUrl.includes("youtu.be")) ? "youtube" : "direct";
   
   // Selected activity for detail modal
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -145,7 +343,7 @@ export default function App() {
   const [selectedWorkshop, setSelectedWorkshop] = useState<Workshop | null>(null);
   
   // Bento gallery lightbox state
-  const [activeLightboxImage, setActiveLightboxImage] = useState<{ url: string; alt: string } | null>(null);
+  const [activeLightboxImage, setActiveLightboxImage] = useState<{ url: string; alt: string; type?: "image" | "video" } | null>(null);
 
   // FAQ accordion open states
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -345,28 +543,33 @@ export default function App() {
   const galleryImages = [
     {
       url: piscinaBolinhasImg,
-      alt: "Recreação Tradicional explorando raciocínio lógico e trabalho em equipe!",
-      span: "md:col-span-2 md:row-span-2"
+      alt: "Recreação Tradicional: Muita energia e diversão na nossa incrível piscina de bolinhas!",
+      span: "md:col-span-2 md:row-span-2",
+      type: "image"
     },
     {
       url: aventuraAoArLivreImg,
       alt: "Aventura ao ar livre: caça ao tesouro com pistas e mistérios no bosque",
-      span: "md:col-span-1 md:row-span-1"
+      span: "md:col-span-1 md:row-span-1",
+      type: "image"
     },
     {
       url: tortaNaCaraImg,
       alt: "Torta na cara hilária: diversão extrema garantida nas festas familiares",
-      span: "md:col-span-1 md:row-span-1"
+      span: "md:col-span-1 md:row-span-1",
+      type: "image"
     },
     {
       url: galeriaCupcakesImg,
       alt: "Leve sua lembrança criada nas Oficinas Criativas pra Casa!!",
-      span: "md:col-span-1 md:row-span-1"
+      span: "md:col-span-1 md:row-span-1",
+      type: "image"
     },
     {
-      url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBRusJJcyEcL-u5swotEEQnDeSZoXtaGI0lr-oyOLj2dMlCm53L6plylJl66gpRZz1nEmOBjgMlOy8pKFfZjae73lNukc0bo6tOBBhp76Lv5Ch8R6nHEb8bxmq-F8F7CmszNLgxToJjWExAdjetN0cKcQ3JOaCy_u8I7nHfBcs8T4e4IN02z-GaJpOgacCnGhd0e4bpyjpRTc-mTa4umf_gFyhpb7mzSwahljMdkpekpAmQThVaCge0bKG-OStjbaFuueykyeh3-Xbt",
-      alt: "Recreação Tradicional explorando raciocínio lógico e trabalho em equipe!",
-      span: "md:col-span-1 md:row-span-1"
+      url: currentVideoResolved,
+      alt: "Dia do Desafio: Atividade de recreação e dança contagiante com a equipe da Alfa Kids!",
+      span: "md:col-span-1 md:row-span-1",
+      type: "video"
     }
   ];
 
@@ -1123,7 +1326,7 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
                 Momentos <span className="text-recreation-orange">Alfa Kids de Verdade</span>
               </h2>
               <p className="text-neutral-500 text-sm md:text-base">
-                Clique nas fotos do nosso bento grid de memórias para ampliar e testemunhar a atmosfera de pura alegria.
+                Clique nas fotos/vídeos da nossa galeria de memórias para ampliar e testemunhar a atmosfera de pura alegria.
               </p>
             </div>
 
@@ -1133,18 +1336,62 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
                 <div 
                   key={i} 
                   className={`relative overflow-hidden rounded-3xl border-2 border-white group shadow-sm hover:shadow-lg transition-transform hover:-translate-y-1 duration-300 ${img.span || ""}`}
-                  onClick={() => setActiveLightboxImage({ url: img.url, alt: img.alt })}
+                  onClick={() => setActiveLightboxImage({ url: img.url, alt: img.alt, type: img.type as "image" | "video" })}
                 >
-                  <img 
-                    src={img.url} 
-                    alt={img.alt} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 cursor-pointer"
-                  />
+                  {img.type === "video" ? (
+                    <div className="w-full h-full relative">
+                      {currentVideoResolvedType === "youtube" ? (
+                        <div className="w-full h-full bg-neutral-900 relative flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
+                          <img 
+                            src={`https://img.youtube.com/vi/${getYoutubeId(img.url) || "dQw4w9WgXcQ"}/0.jpg`} 
+                            alt={img.alt} 
+                            className="w-full h-full object-cover opacity-70"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        </div>
+                      ) : (
+                        <video 
+                          src={img.url} 
+                          className="w-full h-full object-cover cursor-pointer"
+                          muted
+                          loop
+                          playsInline
+                          autoPlay
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.includes('gtv-videos-bucket') && !target.src.startsWith('blob:')) {
+                              target.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4';
+                              target.load();
+                              target.play().catch(() => {});
+                            }
+                          }}
+                        />
+                      )}
+                      {/* Video visual indicator badge */}
+                      <div className="absolute top-3 right-3 bg-recreation-orange text-white p-2 rounded-full shadow-md z-10 animate-pulse flex items-center justify-center">
+                        <Play className="w-4 h-4 fill-current" />
+                      </div>
+                    </div>
+                  ) : (
+                    <img 
+                      src={img.url} 
+                      alt={img.alt} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 cursor-pointer"
+                    />
+                  )}
                   
                   {/* Subtle zoom overlays */}
                   <div className="absolute inset-0 bg-neutral-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer">
                     <span className="bg-white text-cosmic-blue p-3.5 rounded-full shadow-lg font-bold text-xs flex items-center gap-1 scale-90 group-hover:scale-100 transition-transform">
-                      <Sparkles className="w-3.5 h-3.5 text-recreation-orange" /> Ampliar Memória
+                      {img.type === "video" ? (
+                        <>
+                          <Play className="w-3.5 h-3.5 text-recreation-orange fill-current" /> Assistir Vídeo
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 text-recreation-orange" /> Ampliar Memória
+                        </>
+                      )}
                     </span>
                   </div>
 
@@ -1660,11 +1907,40 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
           </button>
           
           <div className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col items-center gap-4">
-            <img 
-              src={activeLightboxImage.url} 
-              alt={activeLightboxImage.alt} 
-              className="rounded-2xl max-w-full max-h-[75vh] object-contain border-4 border-white/10 shadow-2xl"
-            />
+            {activeLightboxImage.type === "video" ? (
+              currentVideoResolvedType === "youtube" ? (
+                <div className="w-[90vw] max-w-4xl aspect-video rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl bg-black">
+                  <iframe 
+                    src={`https://www.youtube.com/embed/${getYoutubeId(activeLightboxImage.url)}?autoplay=1&mute=0`} 
+                    title={activeLightboxImage.alt}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+              ) : (
+                <video 
+                  src={activeLightboxImage.url} 
+                  className="rounded-2xl max-w-full max-h-[60vh] object-contain border-4 border-white/10 shadow-2xl"
+                  controls
+                  autoPlay
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes('gtv-videos-bucket') && !target.src.startsWith('blob:')) {
+                      target.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4';
+                      target.load();
+                      target.play().catch(() => {});
+                    }
+                  }}
+                />
+              )
+            ) : (
+              <img 
+                src={activeLightboxImage.url} 
+                alt={activeLightboxImage.alt} 
+                className="rounded-2xl max-w-full max-h-[75vh] object-contain border-4 border-white/10 shadow-2xl"
+              />
+            )}
             <p className="text-white text-center text-sm font-semibold max-w-xl leading-relaxed">
               {activeLightboxImage.alt}
             </p>
