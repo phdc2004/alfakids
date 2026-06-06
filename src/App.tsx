@@ -1365,7 +1365,7 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
                           autoPlay
                           onError={(e) => {
                             const target = e.currentTarget;
-                            if (!target.src.includes('gtv-videos-bucket') && !target.src.startsWith('blob:')) {
+                            if (target.src !== 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4') {
                               target.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4';
                               target.load();
                               target.play().catch(() => {});
@@ -1935,7 +1935,7 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
                   autoPlay
                   onError={(e) => {
                     const target = e.currentTarget;
-                    if (!target.src.includes('gtv-videos-bucket') && !target.src.startsWith('blob:')) {
+                    if (target.src !== 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4') {
                       target.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4';
                       target.load();
                       target.play().catch(() => {});
