@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import regeneratedImage from "./assets/images/regenerated_image_1779980547471.jpg";
 import textLogoPng from "./assets/images/regenerated_image_1780341386975.png";
 import quemSomosImg1 from "./assets/images/regenerated_image_1780105520084.jpg";
@@ -335,8 +335,7 @@ export default function App() {
     }
   };
 
-  const currentVideoResolved = videoBlobUrl || customVideoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4";
-  const currentVideoResolvedType = customVideoUrl && (customVideoUrl.includes("youtube.com") || customVideoUrl.includes("youtu.be")) ? "youtube" : "direct";
+  const isVideoUrlYoutube = (url: string) => url.includes("youtube.com") || url.includes("youtu.be");
   
   // Selected activity for detail modal
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -568,7 +567,7 @@ export default function App() {
       type: "image"
     },
     {
-      url: currentVideoResolved,
+      url: videoBlobUrl || customVideoUrl || diaDoDesafioVideo,
       alt: "Dia do Desafio: Atividade de recreação e dança contagiante com a equipe da Alfa Kids!",
       span: "md:col-span-1 md:row-span-1",
       type: "video"
@@ -1073,7 +1072,7 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
               {/* USP List */}
               <div className="space-y-3.5 pt-2">
                 {[
-                  { title: "Profissionais Especializados", desc: "Monitores que entendem de motricidade infantil, segurança e recreação lúdica.", icon: ShieldCheck },
+                  { title: "Profissionais Especializados", desc: "Recreadores que entendem de motricidade infantil, segurança e recreação lúdica.", icon: ShieldCheck },
                   { title: "Segurança Ativa em 1º Lugar", desc: "Todo o material de gincanas é higienizado rigorosamente e hipoalergênico.", icon: Award },
                   { title: "Foco Total na Inclusão", desc: "Garantimos que todas as crianças da festa, independente da sua individualidade, se divirtam.", icon: Heart }
                 ].map((usp, i) => (
@@ -1346,7 +1345,7 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
                 >
                   {img.type === "video" ? (
                     <div className="w-full h-full relative">
-                      {currentVideoResolvedType === "youtube" ? (
+                      {isVideoUrlYoutube(img.url) ? (
                         <div className="w-full h-full bg-neutral-900 relative flex items-center justify-center group-hover:scale-105 transition-transform duration-700">
                           <img 
                             src={`https://img.youtube.com/vi/${getYoutubeId(img.url) || "dQw4w9WgXcQ"}/0.jpg`} 
@@ -1357,21 +1356,14 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
                         </div>
                       ) : (
                         <video 
-                          src={img.url} 
                           className="w-full h-full object-cover cursor-pointer"
                           muted
                           loop
                           playsInline
                           autoPlay
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            if (target.src !== 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4') {
-                              target.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4';
-                              target.load();
-                              target.play().catch(() => {});
-                            }
-                          }}
-                        />
+                        >
+                          <source src={img.url} type="video/mp4" />
+                        </video>
                       )}
                       {/* Video visual indicator badge */}
                       <div className="absolute top-3 right-3 bg-recreation-orange text-white p-2 rounded-full shadow-md z-10 animate-pulse flex items-center justify-center">
@@ -1917,7 +1909,7 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
           
           <div className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col items-center gap-4">
             {activeLightboxImage.type === "video" ? (
-              currentVideoResolvedType === "youtube" ? (
+              isVideoUrlYoutube(activeLightboxImage.url) ? (
                 <div className="w-[90vw] max-w-4xl aspect-video rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl bg-black">
                   <iframe 
                     src={`https://www.youtube.com/embed/${getYoutubeId(activeLightboxImage.url)}?autoplay=1&mute=0`} 
@@ -1928,20 +1920,18 @@ Estou no aguardo para conversar sobre as melhores opções para nosso grande dia
                   />
                 </div>
               ) : (
-                <video 
-                  src={activeLightboxImage.url} 
-                  className="rounded-2xl max-w-full max-h-[60vh] object-contain border-4 border-white/10 shadow-2xl"
-                  controls
-                  autoPlay
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (target.src !== 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4') {
-                      target.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4';
-                      target.load();
-                      target.play().catch(() => {});
-                    }
-                  }}
-                />
+                <div className="flex flex-col items-center gap-3">
+                  <video 
+                    className="rounded-2xl max-w-full max-h-[55vh] object-contain border-4 border-white/10 shadow-2xl"
+                    controls
+                    autoPlay
+                    playsInline
+                  >
+                    <source src={activeLightboxImage.url} type="video/mp4" />
+                    Seu navegador não suporta a reprodução deste vídeo. 
+                    <a href={activeLightboxImage.url} download className="text-recreation-orange underline ml-2">Baixar Vídeo</a>
+                  </video>
+                </div>
               )
             ) : (
               <img 
